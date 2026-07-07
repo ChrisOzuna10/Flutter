@@ -7,9 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../data/repositories/local_storage_service.dart';
 import '../../../data/repositories/dashboard_repository.dart';
 import '../controller/home_controller.dart';
+import '../../profile/screens/profile_screen.dart';
 import '../widgets/dashboard_widgets.dart';
+import '../../bitacora/widgets/bitacora_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   /// Token de sesión — en la siguiente iteración vendrá de flutter_secure_storage.
@@ -38,6 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  String _initials() {
+    const name = 'Juan Pérez';
+    final parts = name.split(' ');
+    final a = parts.isNotEmpty && parts[0].isNotEmpty ? parts[0][0] : '';
+    final b = parts.length > 1 && parts[1].isNotEmpty ? parts[1][0] : '';
+    return '$a$b'.toUpperCase();
+  }
+
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -47,6 +58,39 @@ class _HomeScreenState extends State<HomeScreen> {
       animation: _ctrl,
       builder: (context, _) {
         return Scaffold(
+          // Drawer lateral con acceso a perfil
+          drawer: Drawer(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                UserAccountsDrawerHeader(
+                  accountName: const Text('Juan Pérez'),
+                  accountEmail: const Text('juan@example.com'),
+                  currentAccountPicture: CircleAvatar(
+                    child: Text(_initials()),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.person_outline_rounded),
+                  title: const Text('Perfil'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.logout),
+                  title: const Text('Cerrar sesión'),
+                  onTap: () async {
+                    final storage = LocalStorageService();
+                    await storage.clearAll();
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                ),
+              ],
+            ),
+          ),
           backgroundColor: cs.surface,
 
           // ── AppBar ────────────────────────────────────────────────────────
@@ -57,11 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
             index: _ctrl.tabIndex,
             children: [
               _DashboardTab(ctrl: _ctrl),
-              const _PlaceholderTab(
-                icon: Icons.edit_note_rounded,
-                label: 'Bitácoras',
-                subtitle: 'Módulo en construcción',
-              ),
+              const BitacoraTab(),
               const _PlaceholderTab(
                 icon: Icons.person_outline_rounded,
                 label: 'Perfil',

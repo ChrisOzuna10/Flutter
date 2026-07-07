@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../core/utils/validators.dart';
 import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/local_storage_service.dart';
 import '../controllers/login_controller.dart';
 import '../widgets/moniguard_wordmark.dart';
 
@@ -51,6 +52,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (_loginCtrl.status == LoginStatus.success) {
       HapticFeedback.mediumImpact();
+      // Store the logged user's email for re-authentication needs
+      final storage = LocalStorageService();
+      await storage.setUserEmail(email: _emailCtrl.text.trim());
       widget.onLoginSuccess(context);
     } else if (_loginCtrl.status == LoginStatus.failure) {
       HapticFeedback.heavyImpact();
